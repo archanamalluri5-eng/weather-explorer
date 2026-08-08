@@ -6,12 +6,10 @@ archive API, stores the raw JSON in object storage, and serves a dashboard to
 trigger/store, browse, and visualize those files.
 
 **Live demo & repo**
-- Live demo: `https://your-frontend.vercel.app` (last verified live: —)
-- GitHub: `https://github.com/your-username/weather-explorer`
-- Backend API: `https://your-backend.onrender.com` (auto-docs at `/docs`)
-
-> Live URLs are placeholders here — the app is ready to deploy with the exact
-> steps below. See [Deployment](#deployment).
+- Live demo (frontend): **https://frontend-one-roan-33.vercel.app**
+- Backend API: **https://weather-explorer-api.vercel.app** (auto-docs at `/docs`)
+- GitHub: **https://github.com/archanamalluri5-eng/weather-explorer**
+- Last verified live: **2026-08-08**
 
 ---
 
@@ -21,15 +19,17 @@ trigger/store, browse, and visualize those files.
 weather-explorer/
 ├── backend/                 # FastAPI service
 │   ├── app/
-│   │   ├── main.py          # App factory, CORS, error handling
-│   │   ├── config.py        # Env-driven settings
-│   │   ├── validation.py    # Shared validation helpers
-│   │   ├── routes/          # HTTP endpoints
-│   │   ├── services/        # Open-Meteo client + store orchestrator
-│   │   └── storage/         # Local / GCS / S3 backends behind one interface
-│   ├── tests/               # pytest suite (29 tests)
+│   │   ├── app_factory.py     # App factory, CORS, error handling
+│   │   ├── config.py          # Env-driven settings
+│   │   ├── validation.py      # Shared validation helpers
+│   │   ├── routes/            # HTTP endpoints
+│   │   ├── services/          # Open-Meteo client + store orchestrator
+│   │   └── storage/           # Local / GCS / S3 backends behind one interface
+│   ├── api/index.py           # Vercel (ASGI) entrypoint
+│   ├── vercel.json            # Vercel function config
+│   ├── tests/                 # pytest suite (29 tests)
 │   ├── requirements.txt
-│   └── Dockerfile           # Cloud Run / Render image
+│   └── Dockerfile             # Cloud Run / Render image
 └── frontend/                # React + Vite + Tailwind dashboard
     └── src/
         ├── api.js           # fetch wrapper
@@ -151,28 +151,39 @@ storage with `gcloud storage buckets create gs://…`.
 
 ## Deployment
 
-### Backend (Render free web service or GCP Cloud Run free tier)
-1. Push this repo to GitHub.
-2. On Render, create a new **Web Service**, point it at `backend/`, build command
-   `pip install -r requirements.txt`, start command
-   `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-   (Or build the included `Dockerfile` to Cloud Run.)
-3. Add the env vars from `backend/.env.example` (`CORS_ORIGINS` set to your
-   frontend domain, and the storage vars from the section above).
-4. Note the backend URL, e.g. `https://weather-explorer-api.onrender.com`.
+Both pieces currently run on Vercel (free tier):
 
-### Frontend (Vercel / Netlify)
-1. Create a new project from the repo, **root directory: `frontend`**.
-2. Build command `npm run build`, output directory `dist`.
-3. Set env var `VITE_API_BASE_URL=https://your-backend.onrender.com/api`.
-4. Deploy. The dashboard is now live.
+- **Frontend** (`frontend/`): Vercel project `frontend`, build `npm run build`,
+  output `dist`, env `VITE_API_BASE_URL=https://weather-explorer-api.vercel.app/api`.
+- **Backend** (`backend/`): Vercel project `weather-explorer-api`, Python/ASGI
+  runtime, entrypoint `api/index.py` (see `backend/vercel.json`). Env:
+  `STORAGE_BACKEND=local`, `LOCAL_DATA_DIR=/tmp/weather-data`.
+
+To redeploy after a change:
+```bash
+cd backend && vercel --prod && cd ../frontend && vercel --prod
+```
+New deploys get fresh stable aliases (`weather-explorer-api.vercel.app` and
+`frontend-one-roan-33.vercel.app`); if Vercel changes an alias, update this
+README and the frontend's `VITE_API_BASE_URL`.
+
+### Alternative: Render (blueprint included)
+The repo still ships `render.yaml` (one-click "New + Blueprint" on Render,
+free web service) and `backend/Dockerfile` (Cloud Run). Those paths are not
+currently used for the live demo but are kept as documented alternatives.
+
+### Storage on the live demo
+The live backend uses the **local** storage backend writing to `/tmp`. On
+Vercel serverless that directory is **ephemeral** — files persist across
+requests while the function instance is warm but may be lost on a cold start.
+That is acceptable for the demo; for durable storage point `STORAGE_BACKEND`
+at GCS or S3 (free tiers) using the same env-switchable interface (see below).
 
 ### Last verified live
-This repository is currently **not** deployed (placeholders in the header). To
-make it live at review time: run the two steps above, then update the "Live
-demo & repo" block in this README with the real URLs and the date it was
-verified. Re-deploying after a change is a one-click re-deploy in either
-platform.
+**2026-08-08** — `POST /store-weather-data`, `GET /list-weather-files`, and
+`GET /weather-file-content/{file}` all verified against the live URLs above,
+including a real Open-Meteo fetch (New York, June 2024) and CORS from the
+frontend origin.
 
 ---
 
