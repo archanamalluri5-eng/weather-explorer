@@ -13,4 +13,4 @@ COPY app ./app
 
 # Cloud Run / Render inject PORT at runtime.
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn app.app_factory:app --host 0.0.0.0 --port ${PORT:-8000}"]

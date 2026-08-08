@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.app_factory import app
 from app.storage.local import LocalStorage
 
 

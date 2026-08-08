@@ -17,3 +17,6 @@ backend/data/
 .env
 .env.local
 .env.production
+
+# vercel CLI link dir
+.vercel/
