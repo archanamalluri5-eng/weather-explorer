@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# build output
+frontend/dist/
+
+# local dev data (local storage backend)
+backend/data/
+
+# environment files (contain secrets)
+.env
+.env.local
+.env.production
