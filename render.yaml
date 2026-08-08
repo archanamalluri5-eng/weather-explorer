@@ -1,0 +1,28 @@
+# Render blueprint for the Weather Explorer backend.
+# "New + Blueprint" in Render -> select this repo -> deploy.
+#
+# Free tier (no credit card). NOTE: the free instance sleeps after 15 min of
+# inactivity and local disk is ephemeral — for persisted weather files point the
+# storage vars below at GCS or S3 (see README).
+services:
+  - type: web
+    name: weather-explorer-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: STORAGE_BACKEND
+        value: local
+      - key: CORS_ORIGINS
+        value: "*"
+      # To persist files in the cloud, set these instead of the local default:
+      # - key: STORAGE_BACKEND
+      #   value: gcs
+      # - key: GOOGLE_CLOUD_PROJECT
+      #   sync: false
+      # - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
+      #   sync: false
+      # - key: STORAGE_BUCKET
+      #   value: your-bucket-name
